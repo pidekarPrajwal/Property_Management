@@ -26,6 +26,8 @@ These pieces were added:
 - Login with a Bearer token.
 - Rules so a person cannot open data outside their place in the organisation.
 
+Each module follows the same order: model, then serializers, then views, then URLs. Serializers and views are split by record. Login stays separate from the user add/list/update/delete calls. Models were not changed.
+
 The old admin page at `/admin/` is still there. The database was not changed by this work. You still need to create the tables yourself. The commands are at the end of this file.
 
 ## User hierarchy
@@ -101,11 +103,13 @@ These calls all need a Bearer token.
 
 | Action | Method and address |
 | --- | --- |
-| Create user | `POST /api/users/` |
-| List users | `GET /api/users/` |
-| User details | `GET /api/users/<id>/` |
-| Update user | `PUT /api/users/<id>/` or `PATCH /api/users/<id>/` |
-| Delete user | `DELETE /api/users/<id>/` |
+| Create user | `POST /api/add-user/` |
+| List users | `GET /api/get-users/` |
+| User details | `GET /api/get-user-by-id/?id=1` |
+| Update user | `PUT` or `PATCH /api/update-user/?id=1` |
+| Delete user | `DELETE /api/delete-user/?id=1` |
+
+Detail, update and delete do not put the id in the path. Send `?id=` (or `id` in the body for update and delete).
 
 List filters, all optional:
 
@@ -139,15 +143,13 @@ Mobile number is 10 to 15 digits. A leading `+` is allowed. Email, username and 
 
 Each one has the same five actions. All of them need a Bearer token.
 
-| Record | List / Create | One record |
-| --- | --- | --- |
-| State | `/api/states/` | `/api/states/<id>/` |
-| Region | `/api/regions/` | `/api/regions/<id>/` |
-| District | `/api/districts/` | `/api/districts/<id>/` |
-| Area | `/api/areas/` | `/api/areas/<id>/` |
-| Project | `/api/projects/` | `/api/projects/<id>/` |
-
-Use `POST` to create, `GET` to read, `PUT` or `PATCH` to update, and `DELETE` to delete.
+| Record | Create | List | One record | Update | Delete |
+| --- | --- | --- | --- | --- | --- |
+| State | `POST /api/add-state/` | `GET /api/get-states/` | `GET /api/get-state-by-id/?id=1` | `PUT` or `PATCH /api/update-state/?id=1` | `DELETE /api/delete-state/?id=1` |
+| Region | `POST /api/add-region/` | `GET /api/get-regions/` | `GET /api/get-region-by-id/?id=1` | `PUT` or `PATCH /api/update-region/?id=1` | `DELETE /api/delete-region/?id=1` |
+| District | `POST /api/add-district/` | `GET /api/get-districts/` | `GET /api/get-district-by-id/?id=1` | `PUT` or `PATCH /api/update-district/?id=1` | `DELETE /api/delete-district/?id=1` |
+| Area | `POST /api/add-area/` | `GET /api/get-areas/` | `GET /api/get-area-by-id/?id=1` | `PUT` or `PATCH /api/update-area/?id=1` | `DELETE /api/delete-area/?id=1` |
+| Project | `POST /api/add-project/` | `GET /api/get-projects/` | `GET /api/get-project-by-id/?id=1` | `PUT` or `PATCH /api/update-project/?id=1` | `DELETE /api/delete-project/?id=1` |
 
 Relationships:
 
@@ -179,11 +181,11 @@ Optional filters:
 
 | Action | Method and address |
 | --- | --- |
-| Create site | `POST /api/sites/` |
-| List sites | `GET /api/sites/` |
-| Site details | `GET /api/sites/<id>/` |
-| Update site | `PUT /api/sites/<id>/` or `PATCH /api/sites/<id>/` |
-| Delete site | `DELETE /api/sites/<id>/` |
+| Create site | `POST /api/add-site/` |
+| List sites | `GET /api/get-sites/` |
+| Site details | `GET /api/get-site-by-id/?id=1` |
+| Update site | `PUT` or `PATCH /api/update-site/?id=1` |
+| Delete site | `DELETE /api/delete-site/?id=1` |
 
 A site must belong to an **area** and a **project**, and that project must belong to that area.
 
@@ -211,7 +213,16 @@ Authorization: Bearer <access_token>
 
 `POST /api/auth/login/`
 
-Send username and password. The response has:
+A fixed account is created for you when the server starts. You do not need `createsuperuser`.
+
+```json
+{
+  "username": "admin",
+  "password": "123456"
+}
+```
+
+That account is the CMD. The response has:
 
 - `access` — use this as the Bearer token. It lasts 60 minutes.
 - `refresh` — use this to get a new access token, or to log out. It lasts 7 days.
@@ -239,27 +250,84 @@ Send the Bearer access token, and the refresh token in the body:
 
 Logout puts that refresh token on a block list. It cannot be used again. The access token cannot be deleted, because that is how this kind of token works. It stops working after 60 minutes. After logout, do not use the access token again.
 
+## API documentation (Swagger)
+
+The same APIs are listed in Swagger. The API addresses do not change.
+
+| Page | Address |
+| --- | --- |
+| Swagger UI | `http://127.0.0.1:8000/swagger/` |
+| ReDoc | `http://127.0.0.1:8000/redoc/` |
+| OpenAPI schema | `http://127.0.0.1:8000/schema/` |
+
+How to try a protected API in Swagger:
+
+1. Call **Login** under Authentication. Copy the `access` value.
+2. Click **Authorize**.
+3. Enter `Bearer <access_token>`, using that access value. Example: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+4. Click Authorize, then close the box.
+5. Try a protected call, such as Get states.
+
+Login and refresh stay open without that header. Every other API shows a lock. There is no Attendance API in this project, so Swagger does not have an Attendance group.
+
+## Dashboard
+
+`GET /api/dashboard/`
+
+Send `Authorization: Bearer <access_token>`. The response is only the data that head is allowed to see.
+
+- CMD and Main Admin see every state, region, district, area, project, site, and user.
+- A State Head sees their state and everything under it, and not another state.
+- A Region Head sees their region and everything under it.
+- A District Head sees their district and everything under it.
+- An Area Head sees their area, its projects, and its sites.
+- A Project Head sees their project and its sites.
+
+The reply has `user` (the logged-in person), `counts`, and the matching lists.
+
 ## API endpoint list
 
 | Method | Address | Who can call it |
 | --- | --- | --- |
+| GET | `/api/dashboard/` | Logged-in head, only their own branch |
 | POST | `/api/auth/login/` | Anyone |
 | POST | `/api/auth/refresh/` | Anyone with a refresh token |
 | POST | `/api/auth/logout/` | Logged-in user |
-| GET, POST | `/api/users/` | Logged-in user, inside their branch |
-| GET, PUT, PATCH, DELETE | `/api/users/<id>/` | Logged-in user, inside their branch |
-| GET, POST | `/api/states/` | Logged-in user, inside their branch |
-| GET, PUT, PATCH, DELETE | `/api/states/<id>/` | Logged-in user, inside their branch |
-| GET, POST | `/api/regions/` | Logged-in user, inside their branch |
-| GET, PUT, PATCH, DELETE | `/api/regions/<id>/` | Logged-in user, inside their branch |
-| GET, POST | `/api/districts/` | Logged-in user, inside their branch |
-| GET, PUT, PATCH, DELETE | `/api/districts/<id>/` | Logged-in user, inside their branch |
-| GET, POST | `/api/areas/` | Logged-in user, inside their branch |
-| GET, PUT, PATCH, DELETE | `/api/areas/<id>/` | Logged-in user, inside their branch |
-| GET, POST | `/api/projects/` | Logged-in user, inside their branch |
-| GET, PUT, PATCH, DELETE | `/api/projects/<id>/` | Logged-in user, inside their branch |
-| GET, POST | `/api/sites/` | Logged-in user. POST is Area Head only |
-| GET, PUT, PATCH, DELETE | `/api/sites/<id>/` | Logged-in user, inside their branch |
+| POST | `/api/add-user/` | Logged-in user, inside their branch |
+| GET | `/api/get-users/` | Logged-in user, inside their branch |
+| GET | `/api/get-user-by-id/?id=` | Logged-in user, inside their branch |
+| PUT, PATCH | `/api/update-user/?id=` | Logged-in user, inside their branch |
+| DELETE | `/api/delete-user/?id=` | Logged-in user, inside their branch |
+| POST | `/api/add-state/` | CMD and Main Admin |
+| GET | `/api/get-states/` | Logged-in user, inside their branch |
+| GET | `/api/get-state-by-id/?id=` | Logged-in user, inside their branch |
+| PUT, PATCH | `/api/update-state/?id=` | Logged-in user, inside their branch |
+| DELETE | `/api/delete-state/?id=` | Logged-in user, inside their branch |
+| POST | `/api/add-region/` | Logged-in user, inside their branch |
+| GET | `/api/get-regions/` | Logged-in user, inside their branch |
+| GET | `/api/get-region-by-id/?id=` | Logged-in user, inside their branch |
+| PUT, PATCH | `/api/update-region/?id=` | Logged-in user, inside their branch |
+| DELETE | `/api/delete-region/?id=` | Logged-in user, inside their branch |
+| POST | `/api/add-district/` | Logged-in user, inside their branch |
+| GET | `/api/get-districts/` | Logged-in user, inside their branch |
+| GET | `/api/get-district-by-id/?id=` | Logged-in user, inside their branch |
+| PUT, PATCH | `/api/update-district/?id=` | Logged-in user, inside their branch |
+| DELETE | `/api/delete-district/?id=` | Logged-in user, inside their branch |
+| POST | `/api/add-area/` | Logged-in user, inside their branch |
+| GET | `/api/get-areas/` | Logged-in user, inside their branch |
+| GET | `/api/get-area-by-id/?id=` | Logged-in user, inside their branch |
+| PUT, PATCH | `/api/update-area/?id=` | Logged-in user, inside their branch |
+| DELETE | `/api/delete-area/?id=` | Logged-in user, inside their branch |
+| POST | `/api/add-project/` | Logged-in user, inside their branch |
+| GET | `/api/get-projects/` | Logged-in user, inside their branch |
+| GET | `/api/get-project-by-id/?id=` | Logged-in user, inside their branch |
+| PUT, PATCH | `/api/update-project/?id=` | Logged-in user, inside their branch |
+| DELETE | `/api/delete-project/?id=` | Logged-in user, inside their branch |
+| POST | `/api/add-site/` | Area Head only, inside their area |
+| GET | `/api/get-sites/` | Logged-in user, inside their branch |
+| GET | `/api/get-site-by-id/?id=` | Logged-in user, inside their branch |
+| PUT, PATCH | `/api/update-site/?id=` | Logged-in user, inside their branch |
+| DELETE | `/api/delete-site/?id=` | Logged-in user, inside their branch |
 
 ## Example login request
 
@@ -268,8 +336,8 @@ POST http://127.0.0.1:8000/api/auth/login/
 Content-Type: application/json
 
 {
-  "username": "cmd",
-  "password": "CmdAdmin@123"
+  "username": "admin",
+  "password": "123456"
 }
 ```
 
@@ -281,7 +349,7 @@ Example response:
   "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": 1,
-    "username": "cmd",
+    "username": "admin",
     "first_name": "Asha",
     "last_name": "Patil",
     "email": "asha@example.com",
@@ -308,14 +376,14 @@ Example response:
 ## Example Bearer token request
 
 ```text
-GET http://127.0.0.1:8000/api/states/
+GET http://127.0.0.1:8000/api/get-states/
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 Create a region:
 
 ```text
-POST http://127.0.0.1:8000/api/regions/
+POST http://127.0.0.1:8000/api/add-region/
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
 
@@ -326,7 +394,7 @@ Content-Type: application/json
 }
 ```
 
-Create the Area Head of Pune Area:
+Create a user with `POST /api/add-user/`. Example, the Area Head of Pune Area:
 
 ```json
 {
@@ -344,7 +412,7 @@ Create the Area Head of Pune Area:
 }
 ```
 
-Create a site (only when logged in as that Area Head):
+Create a site with `POST /api/add-site/` (only when logged in as that Area Head):
 
 ```json
 {
@@ -399,13 +467,19 @@ venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py makemigrations user setup
 python manage.py migrate
-python manage.py createsuperuser
 python manage.py runserver
 ```
 
-`createsuperuser` asks for username, email, mobile number, first name, last name and password. That account is the **CMD**.
+You do not need `createsuperuser`. After migrate, starting the server creates this login:
+
+```text
+username: admin
+password: 123456
+```
 
 Then open `http://127.0.0.1:8000/api/auth/login/`.
+
+API documentation is at `http://127.0.0.1:8000/swagger/`.
 
 The admin site is still at `http://127.0.0.1:8000/admin/`.
 
