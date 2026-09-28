@@ -4,6 +4,7 @@ from setup.views.area import AreaViewSet
 from setup.views.dashboard import DashboardView
 from setup.views.district import DistrictViewSet
 from setup.views.project import ProjectViewSet
+from setup.views.project_map import ProjectForMapView
 from setup.views.region import RegionViewSet
 from setup.views.site import SiteViewSet
 from setup.views.state import StateViewSet
@@ -52,6 +53,7 @@ urlpatterns = [
     path('delete-area/', AreaViewSet.as_view({'delete': 'delete_area'}), name='delete-area'),
     path('add-project/', ProjectViewSet.as_view({'post': 'create_project'}), name='add-project'),
     path('get-projects/', ProjectViewSet.as_view({'get': 'get_all_project'}), name='get-projects'),
+    path('project-for-map/', ProjectForMapView.as_view(), name='project-for-map'),
     path('get-project-by-id/', ProjectViewSet.as_view({'get': 'get_project_by_id'}), name='get-project-by-id'),
     path(
         'update-project/',

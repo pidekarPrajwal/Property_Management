@@ -554,6 +554,35 @@ response
 ]
 
 
+26a) api_name : project/project-for-map ( GET )
+curl --location 'http://127.0.0.1:8000/api/project-for-map/' \
+--header 'accept: */*' \
+--header 'Authorization: Bearer <access_token>'
+
+response
+{
+    "success": true,
+    "status": 200,
+    "message": "Projects retrieved successfully",
+    "data": {
+        "projects": [
+            {
+                "id": 1,
+                "project_code": "PH",
+                "title": "Pune Housing",
+                "site_location": "18.530823, 73.847466",
+                "phase": null,
+                "building_type": [],
+                "latest_progress": null,
+                "work_order_date": null,
+                "expected_end_date": null,
+                "contractor": null
+            }
+        ]
+    }
+}
+
+
 27) api_name : project/get-project-by-id ( GET )
 curl --location 'http://127.0.0.1:8000/api/get-project-by-id/?id=1' \
 --header 'Authorization: Bearer <access_token>'

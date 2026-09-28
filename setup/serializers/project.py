@@ -17,7 +17,9 @@ class _ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = [
             'id', 'name', 'code', 'area', 'area_name', 'district', 'district_name',
-            'region', 'region_name', 'state', 'state_name', 'created_at', 'updated_at',
+            'region', 'region_name', 'state', 'state_name', 'phase', 'building_type',
+            'work_order_date', 'expected_end_date', 'contractor', 'latest_progress',
+            'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -34,7 +36,22 @@ class _ProjectSerializer(serializers.ModelSerializer):
             codes = codes.exclude(pk=self.instance.pk)
         _reject_duplicate(names, 'A project with this name already exists in the selected area.')
         _reject_duplicate(codes, 'A project with this code already exists in the selected area.', 'code')
+        building_type = attrs.get('building_type', getattr(self.instance, 'building_type', []))
+        if building_type in (None, ''):
+            building_type = []
+        if not isinstance(building_type, list) or not all(isinstance(item, str) for item in building_type):
+            raise serializers.ValidationError({'building_type': 'Send a list of names, for example Residential.'})
+        progress = attrs.get('latest_progress', getattr(self.instance, 'latest_progress', None))
+        if progress == '':
+            progress = None
+        if progress is not None and not isinstance(progress, dict):
+            raise serializers.ValidationError(
+                {'latest_progress': 'Send an object with entry_time, physical_progress_percent, and description.'}
+            )
         attrs['name'] = name
+        attrs['building_type'] = building_type
+        if 'latest_progress' in attrs:
+            attrs['latest_progress'] = progress
         return attrs
 
 
@@ -52,3 +69,37 @@ class GetProjectByIdSerializer(_ProjectSerializer):
 
 class UpdateProjectSerializer(_ProjectSerializer):
     pass
+
+
+def _plain_coordinate(value):
+    text = format(value, 'f').rstrip('0').rstrip('.')
+    return text or '0'
+
+
+class ProjectForMapSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    project_code = serializers.CharField(source='code', allow_blank=True)
+    title = serializers.CharField(source='name')
+    site_location = serializers.SerializerMethodField()
+    phase = serializers.SerializerMethodField()
+    building_type = serializers.SerializerMethodField()
+    latest_progress = serializers.JSONField()
+    work_order_date = serializers.DateField(allow_null=True)
+    expected_end_date = serializers.DateField(allow_null=True)
+    contractor = serializers.SerializerMethodField()
+
+    def get_site_location(self, project):
+        for site in project.sites.all():
+            if site.latitude is None or site.longitude is None:
+                continue
+            return f'{_plain_coordinate(site.latitude)}, {_plain_coordinate(site.longitude)}'
+        return None
+
+    def get_phase(self, project):
+        return project.phase or None
+
+    def get_building_type(self, project):
+        return project.building_type or []
+
+    def get_contractor(self, project):
+        return project.contractor or None

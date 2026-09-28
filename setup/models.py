@@ -96,6 +96,12 @@ class Project(TimeStampedModel):
     name = models.CharField(max_length=150)
     code = models.CharField(max_length=20, blank=True, default='')
     area = models.ForeignKey(Area, on_delete=models.PROTECT, related_name='projects')
+    phase = models.CharField(max_length=40, blank=True, default='')
+    building_type = models.JSONField(default=list, blank=True)
+    work_order_date = models.DateField(null=True, blank=True)
+    expected_end_date = models.DateField(null=True, blank=True)
+    contractor = models.CharField(max_length=255, blank=True, default='')
+    latest_progress = models.JSONField(null=True, blank=True)
 
     class Meta:
         ordering = ['name']
