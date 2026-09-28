@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.models import ProtectedError, Q
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiExample, OpenApiRequest, extend_schema
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from configuration.openapi import (
@@ -100,9 +100,117 @@ class UserViewSet(RecordViewSet):
         summary='Add user',
         description=(
             'Create a user below your designation and inside your hierarchy. '
+            'Send each place as its name or its id. '
+            'A name that does not exist yet is created when this account is allowed to add that place. '
+            'CMD and Main Admin can add a new state by sending its name. '
+            'A State Head must send state, for example Maharashtra. Region, district, area, and project are optional. '
+            'A Region Head must also send the region; district, area, and project stay optional. '
+            'A District Head must also send the district. '
+            'An Area Head must also send the area. '
+            'A Project Head must also send the project. '
+            'CMD and Main Admin leave every place empty. '
             'Password is required. Requires Authorization: Bearer <access_token>.'
         ),
-        request=CreateUserSerializer,
+        request=OpenApiRequest(
+            request=CreateUserSerializer,
+            examples=[
+                OpenApiExample(
+                    'State Head',
+                    value={
+                        'username': 'mh_state_head',
+                        'first_name': 'Ravi',
+                        'last_name': 'Deshmukh',
+                        'email': 'ravi.state@example.com',
+                        'mobile_number': '9000000003',
+                        'password': 'StateHead@123',
+                        'designation': 'STATE_HEAD',
+                        'state': 'Maharashtra',
+                        'region': None,
+                        'district': None,
+                        'area': None,
+                        'project': None,
+                        'is_active': True,
+                    },
+                    request_only=True,
+                ),
+                OpenApiExample(
+                    'Region Head',
+                    value={
+                        'username': 'pune_region_head',
+                        'first_name': 'Meera',
+                        'last_name': 'Joshi',
+                        'email': 'meera.region@example.com',
+                        'mobile_number': '9000000004',
+                        'password': 'RegionHead@123',
+                        'designation': 'REGION_HEAD',
+                        'state': 'Maharashtra',
+                        'region': 'Pune',
+                        'district': None,
+                        'area': None,
+                        'project': None,
+                        'is_active': True,
+                    },
+                    request_only=True,
+                ),
+                OpenApiExample(
+                    'District Head',
+                    value={
+                        'username': 'pune_district_head',
+                        'first_name': 'Amit',
+                        'last_name': 'Shinde',
+                        'email': 'amit.district@example.com',
+                        'mobile_number': '9000000005',
+                        'password': 'DistrictHead@123',
+                        'designation': 'DISTRICT_HEAD',
+                        'state': 'Maharashtra',
+                        'region': 'Pune',
+                        'district': 'Pune',
+                        'area': None,
+                        'project': None,
+                        'is_active': True,
+                    },
+                    request_only=True,
+                ),
+                OpenApiExample(
+                    'Area Head',
+                    value={
+                        'username': 'pune_area_head',
+                        'first_name': 'Neha',
+                        'last_name': 'Kulkarni',
+                        'email': 'neha.area@example.com',
+                        'mobile_number': '9000000006',
+                        'password': 'AreaHead@123',
+                        'designation': 'AREA_HEAD',
+                        'state': 'Maharashtra',
+                        'region': 'Pune',
+                        'district': 'Pune',
+                        'area': 'Pune Area',
+                        'project': None,
+                        'is_active': True,
+                    },
+                    request_only=True,
+                ),
+                OpenApiExample(
+                    'Project Head',
+                    value={
+                        'username': 'pune_project_head',
+                        'first_name': 'Kiran',
+                        'last_name': 'More',
+                        'email': 'kiran.project@example.com',
+                        'mobile_number': '9000000007',
+                        'password': 'ProjectHead@123',
+                        'designation': 'PROJECT_HEAD',
+                        'state': 'Maharashtra',
+                        'region': 'Pune',
+                        'district': 'Pune',
+                        'area': 'Pune Area',
+                        'project': 'Pune Housing',
+                        'is_active': True,
+                    },
+                    request_only=True,
+                ),
+            ],
+        ),
         responses=created(GetUserByIdSerializer),
     )
     def create_user(self, request):

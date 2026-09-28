@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 
 from setup.models import Site
@@ -18,11 +20,22 @@ class _SiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Site
         fields = [
-            'id', 'name', 'code', 'address', 'area', 'area_name', 'project', 'project_name',
+            'id', 'name', 'code', 'address', 'latitude', 'longitude',
+            'area', 'area_name', 'project', 'project_name',
             'district', 'district_name', 'region', 'region_name', 'state', 'state_name',
             'is_active', 'created_by', 'created_by_username', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+
+    def validate_latitude(self, value):
+        if value is not None and not Decimal('-90') <= value <= Decimal('90'):
+            raise serializers.ValidationError('Latitude must be between -90 and 90.')
+        return value
+
+    def validate_longitude(self, value):
+        if value is not None and not Decimal('-180') <= value <= Decimal('180'):
+            raise serializers.ValidationError('Longitude must be between -180 and 180.')
+        return value
 
     def validate(self, attrs):
         name = attrs.get('name', getattr(self.instance, 'name', '')).strip()

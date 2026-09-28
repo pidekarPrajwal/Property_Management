@@ -116,6 +116,8 @@ class Site(TimeStampedModel):
     name = models.CharField(max_length=150)
     code = models.CharField(max_length=20, blank=True, default='')
     address = models.TextField(blank=True, default='')
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
     area = models.ForeignKey(Area, on_delete=models.PROTECT, related_name='sites')
     project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name='sites')
     is_active = models.BooleanField(default=True)

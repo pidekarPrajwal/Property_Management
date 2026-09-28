@@ -123,17 +123,17 @@ Designation values:
 
 Location rules for a new user:
 
-| Designation | Must send | Must leave empty |
+| Designation | Must send | Optional |
 | --- | --- | --- |
-| CMD | nothing | state, region, district, area, project |
-| Main Admin | nothing | state, region, district, area, project |
-| State Head | state | region, district, area, project |
+| CMD | nothing | nothing; leave every place empty |
+| Main Admin | nothing | nothing; leave every place empty |
+| State Head | state, for example Maharashtra | region, district, area, project |
 | Region Head | state and region | district, area, project |
 | District Head | state, region and district | area, project |
 | Area Head | state, region, district and area | project |
 | Project Head | state, region, district, area and project | nothing extra |
 
-The region must belong to the state. The district must belong to the region. The area must belong to the district. The project must belong to the area.
+Send each place as its name or its id. If that name does not exist yet, CMD or Main Admin creates it while adding the user. A State Head sends `"state": "Gujrat"` and leaves region, district, area, and project empty. A Region Head also sends the region name, and the same pattern continues down to Project Head. `0` is empty. The region must belong to the state. The district must belong to the region. The area must belong to the district. The project must belong to the area.
 
 Password is required when creating a user. It is optional when updating. It must be at least 8 characters, not only numbers, and not a very common password.
 
@@ -188,6 +188,8 @@ Optional filters:
 | Delete site | `DELETE /api/delete-site/?id=1` |
 
 A site must belong to an **area** and a **project**, and that project must belong to that area.
+
+`latitude` and `longitude` are two separate fields. Send them as numbers on create or update. They are stored on the site and returned in the site list and the dashboard. Either field can be left out. Latitude must be between -90 and 90. Longitude must be between -180 and 180.
 
 Optional filters: `?search=`, `?state=`, `?region=`, `?district=`, `?area=`, `?project=`.
 
@@ -274,7 +276,9 @@ Login and refresh stay open without that header. Every other API shows a lock. T
 
 `GET /api/dashboard/`
 
-Send `Authorization: Bearer <access_token>`. The response is only the data that head is allowed to see.
+Send `Authorization: Bearer <access_token>`. With no filter, the response is every person and place that head is allowed to see.
+
+Optional filter: `?designation=STATE_HEAD`. That returns the state heads and the regions, districts, areas, projects, sites, and people under their states. `REGION_HEAD`, `DISTRICT_HEAD`, `AREA_HEAD`, and `PROJECT_HEAD` do the same for their own level. `CMD` and `MAIN_ADMIN` return those people and every place still visible to the caller.
 
 - CMD and Main Admin see every state, region, district, area, project, site, and user.
 - A State Head sees their state and everything under it, and not another state.
@@ -419,6 +423,8 @@ Create a site with `POST /api/add-site/` (only when logged in as that Area Head)
   "name": "Shivaji Nagar Site",
   "code": "SN",
   "address": "Shivaji Nagar, Pune",
+  "latitude": 18.530823,
+  "longitude": 73.847466,
   "area": 1,
   "project": 1
 }

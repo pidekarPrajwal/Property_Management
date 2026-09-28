@@ -62,7 +62,8 @@ class SiteViewSet(HierarchyViewSet):
         summary='Add site',
         description=(
             'Only an Area Head can create a site, and only inside their own area, '
-            'for a project in that area. Requires Authorization: Bearer <access_token>.'
+            'for a project in that area. Send latitude and longitude as separate numbers. '
+            'Requires Authorization: Bearer <access_token>.'
         ),
         request=CreateSiteSerializer,
         responses=created(GetSiteByIdSerializer),

@@ -55,8 +55,8 @@ def validate_location_assignment(designation, state, region, district, area, pro
     """Reject a user whose location fields do not match the organisation tree.
 
     CMD and Main Admin are not tied to a place. Every other designation must
-    be linked to its own level and to every level above it, and must not be
-    linked to a level below it. Each child must belong to the selected parent.
+    be linked to its own level and to every level above it. Levels below that
+    are optional. A child that is sent must belong to the selected parent.
     """
     if designation not in REQUIRED_LOCATION_FIELDS:
         raise ValidationError({'designation': 'Select a valid designation.'})
@@ -75,61 +75,25 @@ def validate_location_assignment(designation, state, region, district, area, pro
     for field in LOCATION_FIELDS:
         if field in required and values[field] is None:
             errors[field] = f'A {label} must be linked to a {field}.'
-        elif field not in required and values[field] is not None:
-            errors[field] = (
-                f'A {label} cannot be linked to a {field}. Leave {field} empty.'
-            )
+        elif designation in GLOBAL_DESIGNATIONS and values[field] is not None:
+            errors[field] = f'A {label} cannot be linked to a {field}. Leave {field} empty.'
 
-    chain_ready = set(required)
-    if (
-        'region' in chain_ready
-        and region is not None
-        and state is not None
-        and region.state_id != state.id
-    ):
+    if region is not None and state is None:
+        errors['state'] = 'Select a state before choosing a region.'
+    elif region is not None and state is not None and region.state_id != state.id:
         errors['region'] = 'The selected region does not belong to the selected state.'
-    if (
-        'district' in chain_ready
-        and district is not None
-        and region is not None
-        and district.region_id != region.id
-    ):
+    if district is not None and region is None:
+        errors['region'] = 'Select a region before choosing a district.'
+    elif district is not None and region is not None and district.region_id != region.id:
         errors['district'] = 'The selected district does not belong to the selected region.'
-    elif (
-        'district' in chain_ready
-        and district is not None
-        and state is not None
-        and district.region.state_id != state.id
-    ):
-        errors['district'] = 'The selected district does not belong to the selected state.'
-    if (
-        'area' in chain_ready
-        and area is not None
-        and district is not None
-        and area.district_id != district.id
-    ):
+    if area is not None and district is None:
+        errors['district'] = 'Select a district before choosing an area.'
+    elif area is not None and district is not None and area.district_id != district.id:
         errors['area'] = 'The selected area does not belong to the selected district.'
-    elif (
-        'area' in chain_ready
-        and area is not None
-        and region is not None
-        and area.district.region_id != region.id
-    ):
-        errors['area'] = 'The selected area does not belong to the selected region.'
-    if (
-        'project' in chain_ready
-        and project is not None
-        and area is not None
-        and project.area_id != area.id
-    ):
+    if project is not None and area is None:
+        errors['area'] = 'Select an area before choosing a project.'
+    elif project is not None and area is not None and project.area_id != area.id:
         errors['project'] = 'The selected project does not belong to the selected area.'
-    elif (
-        'project' in chain_ready
-        and project is not None
-        and district is not None
-        and project.area.district_id != district.id
-    ):
-        errors['project'] = 'The selected project does not belong to the selected district.'
 
     if errors:
         raise ValidationError(errors)

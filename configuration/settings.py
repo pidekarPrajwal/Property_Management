@@ -107,8 +107,8 @@ SPECTACULAR_SETTINGS = {
         {'name': 'District', 'description': 'A district belongs to one region.'},
         {'name': 'Area', 'description': 'An area belongs to one district.'},
         {'name': 'Project', 'description': 'A project belongs to one area.'},
-        {'name': 'Site', 'description': 'A site belongs to one area and one project. Only an Area Head can create a site.'},
-        {'name': 'Dashboard', 'description': 'Data visible to the logged-in head only.'},
+        {'name': 'Site', 'description': 'A site belongs to one area and one project. Only an Area Head can create a site. Latitude and longitude are separate fields.'},
+        {'name': 'Dashboard', 'description': 'One response for the logged-in head, limited to that head\'s own branch.'},
     ],
 }
 

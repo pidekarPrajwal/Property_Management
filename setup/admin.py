@@ -43,6 +43,6 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(Site)
 class SiteAdmin(admin.ModelAdmin):
-    list_display = ('name', 'code', 'area', 'project', 'is_active', 'created_by')
+    list_display = ('name', 'code', 'latitude', 'longitude', 'area', 'project', 'is_active', 'created_by')
     list_filter = ('is_active', 'area')
     search_fields = ('name', 'code', 'address')
