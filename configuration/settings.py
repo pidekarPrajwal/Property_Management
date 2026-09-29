@@ -117,6 +117,7 @@ SPECTACULAR_SETTINGS = {
         {'name': 'Area', 'description': 'An area belongs to one district.'},
         {'name': 'Project', 'description': 'A project belongs to one area.'},
         {'name': 'Site', 'description': 'A site belongs to one area and one project. Only an Area Head can create a site. Latitude and longitude are separate fields.'},
+        {'name': 'Dropdown', 'description': 'Id and name lists for frontend selects. Pass type and the parent id.'},
         {'name': 'Dashboard', 'description': 'One response for the logged-in head, limited to that head\'s own branch.'},
     ],
 }

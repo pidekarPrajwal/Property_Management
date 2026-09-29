@@ -38,7 +38,23 @@ SEARCH_PARAM = OpenApiParameter(
     type=OpenApiTypes.STR,
     location=OpenApiParameter.QUERY,
     required=False,
-    description='Case-insensitive search on the name.',
+    description='Case-insensitive search across name, code, and other text fields on that record.',
+)
+
+PAGE_PARAM = OpenApiParameter(
+    name='page',
+    type=OpenApiTypes.INT,
+    location=OpenApiParameter.QUERY,
+    required=False,
+    description='Page number. Defaults to 1.',
+)
+
+PAGE_SIZE_PARAM = OpenApiParameter(
+    name='page_size',
+    type=OpenApiTypes.INT,
+    location=OpenApiParameter.QUERY,
+    required=False,
+    description='Records per page. Defaults to 10. Maximum is 100.',
 )
 
 USER_SEARCH_PARAM = OpenApiParameter(
@@ -77,6 +93,8 @@ PROJECT_FILTER = _optional_id('project', 'Only records in this project.')
 
 USER_LIST_PARAMS = [
     USER_SEARCH_PARAM,
+    PAGE_PARAM,
+    PAGE_SIZE_PARAM,
     DESIGNATION_PARAM,
     STATE_FILTER,
     REGION_FILTER,
@@ -101,7 +119,19 @@ def created(serializer):
 
 
 def listed(serializer):
-    return {200: serializer(many=True), 401: UNAUTHORIZED}
+    paginated = inline_serializer(
+        name=f'Paginated{serializer.__name__}',
+        fields={
+            'count': serializers.IntegerField(),
+            'total_pages': serializers.IntegerField(),
+            'current_page': serializers.IntegerField(),
+            'page_size': serializers.IntegerField(),
+            'next': serializers.CharField(allow_null=True),
+            'previous': serializers.CharField(allow_null=True),
+            'results': serializer(many=True),
+        },
+    )
+    return {200: paginated, 401: UNAUTHORIZED}
 
 
 def one(serializer):
