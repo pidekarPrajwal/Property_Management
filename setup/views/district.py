@@ -3,6 +3,8 @@ from rest_framework.exceptions import PermissionDenied
 
 from configuration.openapi import (
     ID_PARAM,
+    PAGE_PARAM,
+    PAGE_SIZE_PARAM,
     REGION_FILTER,
     SEARCH_PARAM,
     STATE_FILTER,
@@ -55,7 +57,7 @@ class DistrictViewSet(HierarchyViewSet):
         tags=['District'],
         operation_id='get_all_district',
         summary='Get districts',
-        parameters=[SEARCH_PARAM, STATE_FILTER, REGION_FILTER],
+        parameters=[SEARCH_PARAM, PAGE_PARAM, PAGE_SIZE_PARAM, STATE_FILTER, REGION_FILTER],
         responses=listed(GetDistrictSerializer),
     )
     def get_all_district(self, request):

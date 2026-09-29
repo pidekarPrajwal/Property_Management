@@ -1,7 +1,9 @@
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Q
 from rest_framework import status, viewsets
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
+
+from utils.pagination import Pagination
 
 
 def id_filter(queryset, param, raw_value, lookup):
@@ -41,8 +43,10 @@ class RecordViewSet(viewsets.ModelViewSet):
 
     def list_records(self, request):
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        paginator = Pagination()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        serializer = self.get_serializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def record_by_id(self, request):
         serializer = self.get_serializer(self.object_by_id())
@@ -64,13 +68,18 @@ class RecordViewSet(viewsets.ModelViewSet):
 
 
 class HierarchyViewSet(RecordViewSet):
+    search_fields = ('name', 'code')
+
     def get_queryset(self):
         from user.hierarchy import visible_queryset
 
         queryset = visible_queryset(self.request.user, super().get_queryset())
         search = (self.request.query_params.get('search') or '').strip()
-        if search:
-            queryset = queryset.filter(name__icontains=search)
+        if search and self.search_fields:
+            query = Q()
+            for field in self.search_fields:
+                query |= Q(**{f'{field}__icontains': search})
+            queryset = queryset.filter(query).distinct()
         return self.apply_filters(queryset)
 
     def apply_filters(self, queryset):

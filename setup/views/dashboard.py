@@ -1,3 +1,4 @@
+from django.db.models import Q
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.exceptions import ValidationError
@@ -5,7 +6,8 @@ from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from configuration.openapi import FORBIDDEN, INVALID, UNAUTHORIZED
+from configuration.openapi import FORBIDDEN, INVALID, PAGE_PARAM, PAGE_SIZE_PARAM, SEARCH_PARAM, UNAUTHORIZED
+from utils.pagination import Pagination
 from setup.models import Area, District, Project, Region, Site, State
 from setup.serializers.area import GetAreaSerializer
 from setup.serializers.district import GetDistrictSerializer
@@ -114,6 +116,21 @@ def apply_head_filter(designation, users, states, regions, districts, areas, pro
     )
 
 
+def apply_search(queryset, search, *fields):
+    if not search:
+        return queryset
+    query = Q()
+    for field in fields:
+        query |= Q(**{f'{field}__icontains': search})
+    return queryset.filter(query).distinct()
+
+
+def page_of(queryset, request, serializer_class):
+    paginator = Pagination()
+    page = paginator.paginate_queryset(queryset, request)
+    return paginator.page_data(serializer_class(page, many=True).data)
+
+
 def dashboard_designation(raw):
     if raw in (None, ''):
         return None
@@ -138,9 +155,14 @@ class DashboardView(APIView):
             'Pass designation=STATE_HEAD to return those state heads and the regions, districts, '
             'areas, projects, sites, and people under their states. '
             'REGION_HEAD, DISTRICT_HEAD, AREA_HEAD, and PROJECT_HEAD work the same way for their level. '
-            'CMD and MAIN_ADMIN keep those people and every visible place.'
+            'CMD and MAIN_ADMIN keep those people and every visible place. '
+            'Optional search matches names and other text fields. '
+            'Each list is paginated with page and page_size. Counts stay the full totals after search.'
         ),
         parameters=[
+            SEARCH_PARAM,
+            PAGE_PARAM,
+            PAGE_SIZE_PARAM,
             OpenApiParameter(
                 name='designation',
                 type=OpenApiTypes.STR,
@@ -183,6 +205,16 @@ class DashboardView(APIView):
                 projects,
                 sites,
             )
+        search = (request.query_params.get('search') or '').strip()
+        users = apply_search(
+            users, search, 'username', 'first_name', 'last_name', 'email', 'mobile_number'
+        )
+        states = apply_search(states, search, 'name', 'code')
+        regions = apply_search(regions, search, 'name', 'code')
+        districts = apply_search(districts, search, 'name', 'code')
+        areas = apply_search(areas, search, 'name', 'code')
+        projects = apply_search(projects, search, 'name', 'code', 'phase', 'contractor')
+        sites = apply_search(sites, search, 'name', 'code', 'address')
         return Response(
             {
                 'user': GetUserByIdSerializer(actor).data,
@@ -195,12 +227,12 @@ class DashboardView(APIView):
                     'projects': projects.count(),
                     'sites': sites.count(),
                 },
-                'users': GetUserSerializer(users, many=True).data,
-                'states': GetStateSerializer(states, many=True).data,
-                'regions': GetRegionSerializer(regions, many=True).data,
-                'districts': GetDistrictSerializer(districts, many=True).data,
-                'areas': GetAreaSerializer(areas, many=True).data,
-                'projects': GetProjectSerializer(projects, many=True).data,
-                'sites': GetSiteSerializer(sites, many=True).data,
+                'users': page_of(users, request, GetUserSerializer),
+                'states': page_of(states, request, GetStateSerializer),
+                'regions': page_of(regions, request, GetRegionSerializer),
+                'districts': page_of(districts, request, GetDistrictSerializer),
+                'areas': page_of(areas, request, GetAreaSerializer),
+                'projects': page_of(projects, request, GetProjectSerializer),
+                'sites': page_of(sites, request, GetSiteSerializer),
             }
         )

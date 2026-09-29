@@ -71,11 +71,6 @@ class UpdateProjectSerializer(_ProjectSerializer):
     pass
 
 
-def _plain_coordinate(value):
-    text = format(value, 'f').rstrip('0').rstrip('.')
-    return text or '0'
-
-
 class ProjectForMapSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     project_code = serializers.CharField(source='code', allow_blank=True)
@@ -90,10 +85,9 @@ class ProjectForMapSerializer(serializers.Serializer):
 
     def get_site_location(self, project):
         for site in project.sites.all():
-            if site.latitude is None or site.longitude is None:
-                continue
-            return f'{_plain_coordinate(site.latitude)}, {_plain_coordinate(site.longitude)}'
-        return None
+            if site.coordinates:
+                return site.coordinates
+        return []
 
     def get_phase(self, project):
         return project.phase or None

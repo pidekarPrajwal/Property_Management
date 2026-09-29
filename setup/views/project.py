@@ -5,6 +5,8 @@ from configuration.openapi import (
     AREA_FILTER,
     DISTRICT_FILTER,
     ID_PARAM,
+    PAGE_PARAM,
+    PAGE_SIZE_PARAM,
     REGION_FILTER,
     SEARCH_PARAM,
     STATE_FILTER,
@@ -29,6 +31,7 @@ from user.hierarchy import can_modify_area, can_modify_project
 class ProjectViewSet(HierarchyViewSet):
     queryset = Project.objects.select_related('area__district__region__state').all()
     read_serializer_class = GetProjectByIdSerializer
+    search_fields = ('name', 'code', 'phase', 'contractor')
 
     def get_serializer_class(self):
         return {
@@ -66,7 +69,15 @@ class ProjectViewSet(HierarchyViewSet):
         tags=['Project'],
         operation_id='get_all_project',
         summary='Get projects',
-        parameters=[SEARCH_PARAM, STATE_FILTER, REGION_FILTER, DISTRICT_FILTER, AREA_FILTER],
+        parameters=[
+            SEARCH_PARAM,
+            PAGE_PARAM,
+            PAGE_SIZE_PARAM,
+            STATE_FILTER,
+            REGION_FILTER,
+            DISTRICT_FILTER,
+            AREA_FILTER,
+        ],
         responses=listed(GetProjectSerializer),
     )
     def get_all_project(self, request):

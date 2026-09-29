@@ -2,6 +2,7 @@ from django.urls import path
 
 from setup.views.area import AreaViewSet
 from setup.views.dashboard import DashboardView
+from setup.views.dropdown import DropdownView
 from setup.views.district import DistrictViewSet
 from setup.views.project import ProjectViewSet
 from setup.views.project_map import ProjectForMapView
@@ -10,6 +11,7 @@ from setup.views.site import SiteViewSet
 from setup.views.state import StateViewSet
 
 urlpatterns = [
+    path('dropdown/', DropdownView.as_view(), name='dropdown'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('add-state/', StateViewSet.as_view({'post': 'create_state'}), name='add-state'),
     path('get-states/', StateViewSet.as_view({'get': 'get_all_state'}), name='get-states'),

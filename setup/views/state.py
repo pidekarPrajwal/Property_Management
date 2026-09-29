@@ -1,7 +1,17 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import PermissionDenied
 
-from configuration.openapi import ID_PARAM, SEARCH_PARAM, created, deleted, listed, one, updated
+from configuration.openapi import (
+    ID_PARAM,
+    PAGE_PARAM,
+    PAGE_SIZE_PARAM,
+    SEARCH_PARAM,
+    created,
+    deleted,
+    listed,
+    one,
+    updated,
+)
 
 from setup.models import State
 from setup.serializers.state import (
@@ -42,7 +52,7 @@ class StateViewSet(HierarchyViewSet):
         operation_id='get_all_state',
         summary='Get states',
         description='List the states this account is allowed to see.',
-        parameters=[SEARCH_PARAM],
+        parameters=[SEARCH_PARAM, PAGE_PARAM, PAGE_SIZE_PARAM],
         responses=listed(GetStateSerializer),
     )
     def get_all_state(self, request):

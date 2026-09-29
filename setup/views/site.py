@@ -5,6 +5,8 @@ from configuration.openapi import (
     AREA_FILTER,
     DISTRICT_FILTER,
     ID_PARAM,
+    PAGE_PARAM,
+    PAGE_SIZE_PARAM,
     PROJECT_FILTER,
     REGION_FILTER,
     SEARCH_PARAM,
@@ -35,6 +37,7 @@ class SiteViewSet(HierarchyViewSet):
         'created_by',
     ).all()
     read_serializer_class = GetSiteByIdSerializer
+    search_fields = ('name', 'code', 'address')
 
     def get_serializer_class(self):
         return {
@@ -62,7 +65,7 @@ class SiteViewSet(HierarchyViewSet):
         summary='Add site',
         description=(
             'Only an Area Head can create a site, and only inside their own area, '
-            'for a project in that area. Send latitude and longitude as separate numbers. '
+            'for a project in that area. Send coordinates as a list of latitude and longitude points. '
             'Requires Authorization: Bearer <access_token>.'
         ),
         request=CreateSiteSerializer,
@@ -75,7 +78,16 @@ class SiteViewSet(HierarchyViewSet):
         tags=['Site'],
         operation_id='get_all_site',
         summary='Get sites',
-        parameters=[SEARCH_PARAM, STATE_FILTER, REGION_FILTER, DISTRICT_FILTER, AREA_FILTER, PROJECT_FILTER],
+        parameters=[
+            SEARCH_PARAM,
+            PAGE_PARAM,
+            PAGE_SIZE_PARAM,
+            STATE_FILTER,
+            REGION_FILTER,
+            DISTRICT_FILTER,
+            AREA_FILTER,
+            PROJECT_FILTER,
+        ],
         responses=listed(GetSiteSerializer),
     )
     def get_all_site(self, request):

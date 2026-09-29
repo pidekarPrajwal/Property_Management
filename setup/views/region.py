@@ -3,6 +3,8 @@ from rest_framework.exceptions import PermissionDenied
 
 from configuration.openapi import (
     ID_PARAM,
+    PAGE_PARAM,
+    PAGE_SIZE_PARAM,
     SEARCH_PARAM,
     STATE_FILTER,
     created,
@@ -54,7 +56,7 @@ class RegionViewSet(HierarchyViewSet):
         operation_id='get_all_region',
         summary='Get regions',
         description='List regions inside this account\'s hierarchy.',
-        parameters=[SEARCH_PARAM, STATE_FILTER],
+        parameters=[SEARCH_PARAM, PAGE_PARAM, PAGE_SIZE_PARAM, STATE_FILTER],
         responses=listed(GetRegionSerializer),
     )
     def get_all_region(self, request):

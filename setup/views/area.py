@@ -4,6 +4,8 @@ from rest_framework.exceptions import PermissionDenied
 from configuration.openapi import (
     DISTRICT_FILTER,
     ID_PARAM,
+    PAGE_PARAM,
+    PAGE_SIZE_PARAM,
     REGION_FILTER,
     SEARCH_PARAM,
     STATE_FILTER,
@@ -59,7 +61,7 @@ class AreaViewSet(HierarchyViewSet):
         tags=['Area'],
         operation_id='get_all_area',
         summary='Get areas',
-        parameters=[SEARCH_PARAM, STATE_FILTER, REGION_FILTER, DISTRICT_FILTER],
+        parameters=[SEARCH_PARAM, PAGE_PARAM, PAGE_SIZE_PARAM, STATE_FILTER, REGION_FILTER, DISTRICT_FILTER],
         responses=listed(GetAreaSerializer),
     )
     def get_all_area(self, request):
