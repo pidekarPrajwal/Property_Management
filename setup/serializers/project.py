@@ -85,9 +85,9 @@ class ProjectForMapSerializer(serializers.Serializer):
 
     def get_site_location(self, project):
         for site in project.sites.all():
-            if site.coordinates:
-                return site.coordinates
-        return []
+            if site.latitude and site.longitude:
+                return {'latitude': site.latitude, 'longitude': site.longitude}
+        return {'latitude': [], 'longitude': []}
 
     def get_phase(self, project):
         return project.phase or None

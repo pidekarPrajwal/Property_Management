@@ -79,7 +79,7 @@ class UserViewSet(RecordViewSet):
                 | Q(last_name__icontains=search)
                 | Q(email__icontains=search)
                 | Q(mobile_number__icontains=search)
-            )
+            ).distinct()
         state = self.request.query_params.get('state')
         if state:
             queryset = id_filter(queryset, 'state', state, 'state_id')

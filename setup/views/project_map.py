@@ -20,7 +20,7 @@ class ProjectForMapView(APIView):
         description=(
             'Requires Authorization: Bearer <access_token>. '
             'Returns the projects this account is allowed to see. '
-            'site_location is the polygon of the first site on that project, as a list of latitude and longitude points.'
+            'site_location is the polygon of the first site on that project. latitude and longitude are lists of numbers in the same order.'
         ),
         parameters=[SEARCH_PARAM, PAGE_PARAM, PAGE_SIZE_PARAM],
         responses={200: dict, 401: UNAUTHORIZED},

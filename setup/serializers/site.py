@@ -20,47 +20,48 @@ class _SiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Site
         fields = [
-            'id', 'name', 'code', 'address', 'coordinates',
+            'id', 'name', 'code', 'address', 'latitude', 'longitude',
             'area', 'area_name', 'project', 'project_name',
             'district', 'district_name', 'region', 'region_name', 'state', 'state_name',
             'is_active', 'created_by', 'created_by_username', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
 
-    def validate_coordinates(self, value):
+    def _number_list(self, value, field, low, high):
         if value in (None, ''):
             return []
         if not isinstance(value, list):
-            raise serializers.ValidationError(
-                'Send a list of points, each with latitude and longitude.'
-            )
-        points = []
-        for index, point in enumerate(value, start=1):
-            if not isinstance(point, dict):
-                raise serializers.ValidationError(
-                    f'Point {index} must include latitude and longitude.'
-                )
+            raise serializers.ValidationError(f'{field} must be a list of numbers.')
+        numbers = []
+        for index, item in enumerate(value, start=1):
             try:
-                latitude = Decimal(str(point['latitude']))
-                longitude = Decimal(str(point['longitude']))
-            except (KeyError, InvalidOperation, TypeError, ValueError):
+                number = Decimal(str(item))
+            except (InvalidOperation, TypeError, ValueError):
+                raise serializers.ValidationError(f'{field} value {index} must be a number.')
+            if not low <= number <= high:
                 raise serializers.ValidationError(
-                    f'Point {index} must include latitude and longitude.'
+                    f'{field} value {index} must be between {low} and {high}.'
                 )
-            if not Decimal('-90') <= latitude <= Decimal('90'):
-                raise serializers.ValidationError(
-                    f'Point {index} latitude must be between -90 and 90.'
-                )
-            if not Decimal('-180') <= longitude <= Decimal('180'):
-                raise serializers.ValidationError(
-                    f'Point {index} longitude must be between -180 and 180.'
-                )
-            points.append({'latitude': float(latitude), 'longitude': float(longitude)})
-        if points and len(points) < 3:
-            raise serializers.ValidationError('A site polygon needs at least 3 points.')
-        return points
+            numbers.append(float(number))
+        return numbers
+
+    def validate_latitude(self, value):
+        return self._number_list(value, 'latitude', Decimal('-90'), Decimal('90'))
+
+    def validate_longitude(self, value):
+        return self._number_list(value, 'longitude', Decimal('-180'), Decimal('180'))
 
     def validate(self, attrs):
+        latitudes = attrs.get('latitude', getattr(self.instance, 'latitude', None) or [])
+        longitudes = attrs.get('longitude', getattr(self.instance, 'longitude', None) or [])
+        if len(latitudes) != len(longitudes):
+            raise serializers.ValidationError(
+                'latitude and longitude must contain the same number of values.'
+            )
+        if latitudes and len(latitudes) < 3:
+            raise serializers.ValidationError(
+                'A site polygon needs at least 3 latitude and longitude values.'
+            )
         name = attrs.get('name', getattr(self.instance, 'name', '')).strip()
         code = attrs.get('code', getattr(self.instance, 'code', ''))
         area = attrs.get('area', getattr(self.instance, 'area', None))
