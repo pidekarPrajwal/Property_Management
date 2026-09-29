@@ -9,8 +9,7 @@ place and everything under it. They cannot change the levels above them.
 Creating a child (for example a Region under a State) is allowed only when the
 person is allowed to change that parent.
 
-Site creation is a separate rule: only an Area Head can create a site, and only
-inside their own area.
+Any logged-in user can create a site. The project must belong to the selected area.
 """
 
 from django.db.models import Q
@@ -256,10 +255,3 @@ def can_modify_site(user, area, project):
     return False
 
 
-def can_create_site(user, area, project):
-    """Only the Area Head of this area may add a site, and only for a project in that area."""
-    if getattr(user, 'designation', None) != Designation.AREA_HEAD:
-        return False
-    if area is None or project is None or user.area_id != area.id:
-        return False
-    return project.area_id == area.id

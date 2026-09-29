@@ -124,6 +124,7 @@ class Site(TimeStampedModel):
     address = models.TextField(blank=True, default='')
     latitude = models.JSONField(default=list, blank=True)
     longitude = models.JSONField(default=list, blank=True)
+    current_market_rate = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
     area = models.ForeignKey(Area, on_delete=models.PROTECT, related_name='sites')
     project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name='sites')
     is_active = models.BooleanField(default=True)

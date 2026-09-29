@@ -41,6 +41,7 @@ CSRF_TRUSTED_ORIGINS = [
 INSTALLED_APPS = [
     'user',
     'setup',
+    'properties',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -116,9 +117,10 @@ SPECTACULAR_SETTINGS = {
         {'name': 'District', 'description': 'A district belongs to one region.'},
         {'name': 'Area', 'description': 'An area belongs to one district.'},
         {'name': 'Project', 'description': 'A project belongs to one area.'},
-        {'name': 'Site', 'description': 'A site belongs to one area and one project. Only an Area Head can create a site. latitude and longitude are lists of numbers for the polygon.'},
+        {'name': 'Site', 'description': 'A site belongs to one area and one project. Any logged-in user can create a site. latitude and longitude are lists of numbers for the polygon.'},
         {'name': 'Dropdown', 'description': 'Id and name lists for frontend selects. Pass type and the parent id.'},
         {'name': 'Dashboard', 'description': 'One response for the logged-in head, limited to that head\'s own branch.'},
+        {'name': 'Property', 'description': 'XLSX property sync. Only columns in the file are written.'},
     ],
 }
 
@@ -183,6 +185,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Kilometres around a site when matching a property market rate by latitude and longitude.
+PROPERTY_MARKET_RADIUS_KM = 2
 
 # Let a frontend on another address call this API during local development.
 CORS_ALLOW_ALL_ORIGINS = True

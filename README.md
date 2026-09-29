@@ -197,11 +197,7 @@ People can view, update and delete sites inside their own branch. A Project Head
 
 ## Site creation rule
 
-**Only an Area Head can create a site.**
-
-CMD, Main Admin, State Head, Region Head, District Head and Project Head all receive `403` if they try to create a site.
-
-The Area Head can only create a site inside **their own area**, and the project must belong to that area. Sending another area id does not work.
+Any logged-in user can create a site. The project must belong to the selected area.
 
 ## JWT login and logout
 
@@ -441,7 +437,7 @@ Missing or bad token (`401`):
 Wrong branch (`403`):
 
 ```json
-{ "detail": "Only an Area Head can create a site." }
+{ "detail": "You can view this site, but you cannot change it." }
 ```
 
 Invalid link (`400`):
@@ -506,7 +502,7 @@ The script leaves the Maharashtra sample data in the database so you can keep te
 ## Important rules
 
 1. Every API except login and refresh needs `Authorization: Bearer <access_token>`.
-2. Only an Area Head can create a site, and only in their own area.
+2. Any logged-in user can create a site. The project must belong to the selected area.
 3. A region must belong to the selected state. The same idea applies down the tree.
 4. Sending another id does not let you jump into someone else's branch.
 5. You can manage users only if they are below your designation.

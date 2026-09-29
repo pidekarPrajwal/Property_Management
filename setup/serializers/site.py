@@ -20,12 +20,12 @@ class _SiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Site
         fields = [
-            'id', 'name', 'code', 'address', 'latitude', 'longitude',
+            'id', 'name', 'code', 'address', 'latitude', 'longitude', 'current_market_rate',
             'area', 'area_name', 'project', 'project_name',
             'district', 'district_name', 'region', 'region_name', 'state', 'state_name',
             'is_active', 'created_by', 'created_by_username', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_by', 'created_at', 'updated_at', 'current_market_rate']
 
     def _number_list(self, value, field, low, high):
         if value in (None, ''):

@@ -26,8 +26,7 @@ from setup.serializers.site import (
     UpdateSiteSerializer,
 )
 from setup.views.base import HierarchyViewSet, id_filter
-from user.designations import Designation
-from user.hierarchy import can_create_site, can_modify_site
+from user.hierarchy import can_modify_site
 
 
 class SiteViewSet(HierarchyViewSet):
@@ -64,8 +63,8 @@ class SiteViewSet(HierarchyViewSet):
         operation_id='create_site',
         summary='Add site',
         description=(
-            'Only an Area Head can create a site, and only inside their own area, '
-            'for a project in that area. Send latitude and longitude as lists with one number per polygon point. '
+            'Any logged-in user can create a site. The project must belong to the selected area. '
+            'Send latitude and longitude as lists with one number per polygon point. '
             'Requires Authorization: Bearer <access_token>.'
         ),
         request=CreateSiteSerializer,
@@ -126,14 +125,6 @@ class SiteViewSet(HierarchyViewSet):
         return self.delete_record(request)
 
     def perform_create(self, serializer):
-        area = serializer.validated_data['area']
-        project = serializer.validated_data['project']
-        if not can_create_site(self.request.user, area, project):
-            if self.request.user.designation != Designation.AREA_HEAD:
-                raise PermissionDenied('Only an Area Head can create a site.')
-            raise PermissionDenied(
-                'An Area Head can only create a site inside their own area, for a project in that area.'
-            )
         serializer.save(created_by=self.request.user)
 
     def perform_update(self, serializer):
