@@ -12,7 +12,7 @@ State
                  └── Project
                       └── Site
 ```
-
+ 
 People sit on that tree. A person can only see and change the part of the tree that belongs to them.
 
 ## What was changed
