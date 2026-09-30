@@ -496,4 +496,17 @@ A ready-made script calls every API with `curl.exe`. It creates the Maharashtra 
 ```text
 powershell -ExecutionPolicy Bypass -File .\api_curl.ps1
 ```
+The script leaves the Maharashtra sample data in the database so you can keep testing. It tries to delete the extra Gujarat state at the end.
+
+## Important rules
+
+1. Every API except login and refresh needs `Authorization: Bearer <access_token>`.
+2. Any logged-in user can create a site. The project must belong to the selected area.
+3. A region must belong to the selected state. The same idea applies down the tree.
+4. Sending another id does not let you jump into someone else's branch.
+5. You can manage users only if they are below your designation.
+6. You cannot change your own designation or location, and you cannot delete yourself.
+7. You cannot delete a state, region, district, area or project while lower records still use it.
+8. Logout blocks the refresh token. The access token expires after 60 minutes.
+9. Database commands were not run for you. Run `makemigrations` and `migrate` before the first start.
 
